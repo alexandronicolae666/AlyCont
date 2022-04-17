@@ -57,6 +57,11 @@ def get_vat_rates(values):
             if float(values[vat['total_amount']]) > 0.00]
 
 
+# If the first cell is None, there are no more entries in the page
+def check_page_finished(values):
+    return values[0] == 'None'
+
+
 # Original document
 wb = load_workbook('raport.xlsx')
 ws = wb.active
@@ -69,11 +74,12 @@ new_ws = new_wb.active
 # Start processing
 ok = True
 row_new_document = 1
+row_start = ROW_START
+row_end = ROW_START + ROW_ITEM_COUNT
 while ok == True:
     # Iterate over rows in the original document
     #TODO: Check needed for pages with less invoices ( eg: 20 )
-    for row_original_document in range(ROW_START,
-                                       ROW_START + ROW_ITEM_COUNT + 1):
+    for row_original_document in range(row_start, row_end + 1):
         values = []
         # Going through each cell of a row in the original document
         # Get cell values from the original document after adjusting the merged cells
@@ -81,6 +87,15 @@ while ok == True:
             values.append(
                 get_value_with_merge_lookup(ws, cell, merged_cells_ranges))
 
+        if check_page_finished(values) == True:
+            ok = False
+            break
+
+        # if row_original_document == 153:
+        #     ok = False
+        #     break
+
+        print(f"Processing row {row_original_document}")
         # If total ammount is 0, skip this row
         if not invoice_should_be_processed(values):
             continue
@@ -98,7 +113,11 @@ while ok == True:
                 new_ws[char_new_ws + str(row_new_document)] = value
             # Process a new row in the new document
             row_new_document += 1
-        ok = False
+
+    # Jump to the next page
+    row_start = row_end + ROW_GAP
+    row_end += ROW_ITEM_COUNT + ROW_GAP
+    print(row_start, row_end)
 
 new_wb.save('newdocument.xlsx')
 wb.close()
