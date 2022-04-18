@@ -59,7 +59,7 @@ def get_vat_rates(values):
 
 # If the first cell is None, there are no more entries in the page
 def check_page_finished(values):
-    return values[0] == 'None'
+    return values[0] == 'None' and values[0].isdigit()
 
 
 # Original document
@@ -76,48 +76,41 @@ ok = True
 row_new_document = 1
 row_start = ROW_START
 row_end = ROW_START + ROW_ITEM_COUNT
-while ok == True:
-    # Iterate over rows in the original document
-    #TODO: Check needed for pages with less invoices ( eg: 20 )
-    for row_original_document in range(row_start, row_end + 1):
-        values = []
-        # Going through each cell of a row in the original document
-        # Get cell values from the original document after adjusting the merged cells
-        for cell in ws[row_original_document]:
-            values.append(
-                get_value_with_merge_lookup(ws, cell, merged_cells_ranges))
+# Iterate over rows in the original document
+row_original_document = row_start
+max_rows_original_document = ws.max_row
+while row_original_document <= max_rows_original_document:
+    values = []
+    # Going through each cell of a row in the original document
+    # Get cell values from the original document after adjusting the merged cells
+    for cell in ws[row_original_document]:
+        values.append(
+            get_value_with_merge_lookup(ws, cell, merged_cells_ranges))
 
-        if check_page_finished(values) == True:
-            ok = False
-            break
+    if check_page_finished(values) == True:
+        row_original_document += ROW_GAP - 1
+        continue
 
-        # if row_original_document == 153:
-        #     ok = False
-        #     break
+    print(f"Processing row {row_original_document}")
+    # If total ammount is 0, skip this row
+    if not invoice_should_be_processed(values):
+        row_original_document += 1
+        continue
 
-        print(f"Processing row {row_original_document}")
-        # If total ammount is 0, skip this row
-        if not invoice_should_be_processed(values):
-            continue
+    # Detect the different rates for VAT
+    vats = get_vat_rates(values)
 
-        # Detect the different rates for VAT
-        vats = get_vat_rates(values)
-
-        for vat in vats:
-            # Start building the new file based on the specified headers
-            for col, header in enumerate(HEADERS):
-                header_item = HEADERS[header]
-                value = get_cell_value_for_new_worksheet(
-                    header_item, header, values, vat)
-                char_new_ws = get_column_letter(col + 1)
-                new_ws[char_new_ws + str(row_new_document)] = value
-            # Process a new row in the new document
-            row_new_document += 1
-
-    # Jump to the next page
-    row_start = row_end + ROW_GAP
-    row_end += ROW_ITEM_COUNT + ROW_GAP
-    print(row_start, row_end)
+    for vat in vats:
+        # Start building the new file based on the specified headers
+        for col, header in enumerate(HEADERS):
+            header_item = HEADERS[header]
+            value = get_cell_value_for_new_worksheet(header_item, header,
+                                                     values, vat)
+            char_new_ws = get_column_letter(col + 1)
+            new_ws[char_new_ws + str(row_new_document)] = value
+        # Process a new row in the new document
+        row_new_document += 1
+    row_original_document += 1
 
 new_wb.save('newdocument.xlsx')
 wb.close()
