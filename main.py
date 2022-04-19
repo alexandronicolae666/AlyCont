@@ -59,7 +59,7 @@ def get_vat_rates(values):
 
 # If the first cell is None, there are no more entries in the page
 def check_page_finished(values):
-    return values[0] == 'None' and values[0].isdigit()
+    return values[0] == 'None' and not values[0].isdigit()
 
 
 # Original document
