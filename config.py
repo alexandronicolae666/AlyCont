@@ -3,14 +3,14 @@
 # position_original_document => after formating the values from original document ( and merged values )
 HEADERS = {
     'Numar linie': {
-        'value': '1',
+        'value': None,
         'required': True,
         'position_original_document': None
     },
     'Serie': {
-        'value': None,
+        'value': "DJ NBON F",
         'required': True,
-        'position_original_document': 4
+        'position_original_document': None
     },
     'Numar': {
         'value': None,
@@ -36,11 +36,6 @@ HEADERS = {
         'value': None,
         'required': False,
         'position_original_document': 9
-    },
-    'Nume partener': {
-        'value': None,
-        'required': False,
-        'position_original_document': 10
     },
     'Atribut fiscal': {
         'value': None,
@@ -73,7 +68,7 @@ HEADERS = {
         'position_original_document': None
     },
     'Judet': {
-        'value': 'Dolj',
+        'value': None,
         'required': False,
         'position_original_document': None
     },
@@ -87,7 +82,7 @@ HEADERS = {
         'required': False,
         'position_original_document': None
     },
-    'Numar': {
+    'Numar strada': {
         'value': None,
         'required': False,
         'position_original_document': None
@@ -128,7 +123,7 @@ HEADERS = {
         'position_original_document': None
     },
     'TVA la incasare': {
-        'value': "1",
+        'value': "0",
         'required': False,
         'position_original_document': None
     },
@@ -156,17 +151,73 @@ HEADERS = {
         'value': None,
         'required': True,
         'position_original_document': None
-    }
+    },
+    'Cod articol': {
+        'value': None,
+        'required': False,
+        'position_original_document': None
+    },
+    'Denumire articol': {
+        'value': None,
+        'required': False,
+        'position_original_document': None
+    },
+    'Cantitate': {
+        'value': 1,
+        'required': True,
+        'position_original_document': None
+    },
+    'Cont serviciu': {
+        'value': None,
+        'required': False,
+        'position_original_document': None
+    },
+    'Pret de lista': {
+        'value': None,
+        'required': False,
+        'position_original_document': None
+    },
+    'Valoare fara tva': {
+        'value': None,
+        'required': False,
+        'position_original_document': None
+    },
+    'Val TVA': {
+        'value': None,
+        'required': False,
+        'position_original_document': None
+    },
+    'Val cu TVA': {
+        'value': None,
+        'required': False,
+        'position_original_document': None
+    },
+    'Optiune TVA': {
+        'value': None,
+        'required': False,
+        'position_original_document': None
+    },
+    'Cota TVA': {
+        'value': None,
+        'required': False,
+        'position_original_document': None
+    },
 }
 
 VAT_POSITIONS = {
     '19': {
         'total_amount': 17,
-        'vat': 18
+        'vat': 18,
+        'article_code': '0000018',
+        'article_description': 'Marfa 19% sv',
+        'vat_percent': '19'
     },
     '9': {
         'total_amount': 19,
-        'vat': 20
+        'vat': 20,
+        'article_code': '0000017',
+        'article_description': 'Marfa 9% sv',
+        'vat_percent': '9'
     }
 }
 
