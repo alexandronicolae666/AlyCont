@@ -1,4 +1,8 @@
+altgraph==0.17.2
 et-xmlfile==1.1.0
+macholib==1.16
 openpyxl==3.0.9
+pyinstaller==5.0
+pyinstaller-hooks-contrib==2022.4
 xlrd==2.0.1
 yapf==0.32.0

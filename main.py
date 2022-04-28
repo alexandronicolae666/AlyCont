@@ -1,6 +1,10 @@
 from openpyxl import Workbook, load_workbook
 from openpyxl.utils import rows_from_range, get_column_letter
 from config import HEADERS, ROW_START, ROW_ITEM_COUNT, ROW_GAP, VAT_POSITIONS
+from tkinter import *
+from tkinter import filedialog, messagebox
+import os
+import time
 
 
 # TODO: Cache the result of merged_cells
@@ -83,57 +87,127 @@ def check_page_finished(values):
     return values[0] == 'None' or not values[0].isdigit()
 
 
-# Original document
-wb = load_workbook('raport.xlsx')
-ws = wb.active
-merged_cells_ranges = ws.merged_cells.ranges
+def convert_xls_to_xlsx(filename):
+    # /cacat/pisat.xls
+    destination = '/'.join(filename.split('/')[0:-1])
+    sys = os.system(
+        f'/Applications/LibreOffice.app/Contents/MacOS/soffice --convert-to xlsx "{filename}" --outdir "{destination}"'
+    )
+    time.sleep(3)
 
-# New document
-new_wb = Workbook()
-new_ws = new_wb.active
 
-# Start processing
-ok = True
-row_new_document = 1
-row_start = ROW_START
-row_end = ROW_START + ROW_ITEM_COUNT
-# Iterate over rows in the original document
-row_original_document = row_start
-max_rows_original_document = ws.max_row
-while row_original_document <= max_rows_original_document:
-    values = []
-    # Going through each cell of a row in the original document
-    # Get cell values from the original document after adjusting the merged cells
-    for cell in ws[row_original_document]:
-        values.append(
-            get_value_with_merge_lookup(ws, cell, merged_cells_ranges))
+def convert_xlxs_to_xls(filename):
+    destination = '/'.join(filename.split('/')[0:-1])
+    sys = os.system(
+        f'/Applications/LibreOffice.app/Contents/MacOS/soffice --convert-to xls "{filename}" --outdir "{destination}"'
+    )
+    time.sleep(3)
 
-    if check_page_finished(values) == True:
-        row_original_document += ROW_GAP - 1
-        continue
 
-    print(f"Processing row {row_original_document}")
-    # If total ammount is 0, skip this row
-    if not invoice_should_be_processed(values):
+def main_app(filename):
+    convert_xls_to_xlsx(filename)
+    # Original document
+    wb = load_workbook(filename.replace('.xls', '.xlsx'))
+    ws = wb.active
+    merged_cells_ranges = ws.merged_cells.ranges
+
+    # New document
+    new_wb = Workbook()
+    new_ws = new_wb.active
+
+    # Start processing
+    ok = True
+    row_new_document = 1
+    row_start = ROW_START
+    row_end = ROW_START + ROW_ITEM_COUNT
+    # Iterate over rows in the original document
+    row_original_document = row_start
+    max_rows_original_document = ws.max_row
+    while row_original_document <= max_rows_original_document:
+        values = []
+        # Going through each cell of a row in the original document
+        # Get cell values from the original document after adjusting the merged cells
+        for cell in ws[row_original_document]:
+            values.append(
+                get_value_with_merge_lookup(ws, cell, merged_cells_ranges))
+
+        if check_page_finished(values) == True:
+            row_original_document += ROW_GAP - 1
+            continue
+
+        print(f"Processing row {row_original_document}")
+        # If total ammount is 0, skip this row
+        if not invoice_should_be_processed(values):
+            row_original_document += 1
+            continue
+
+        # Detect the different rates for VAT
+        vats = get_vat_rates(values)
+
+        line_number = 1
+        for vat in vats:
+            # Start building the new file based on the specified headers
+            for col, header in enumerate(HEADERS):
+                header_item = HEADERS[header]
+                value = get_cell_value_for_new_worksheet(
+                    header_item, header, values, vat, line_number)
+                char_new_ws = get_column_letter(col + 1)
+                new_ws[char_new_ws + str(row_new_document)] = value
+            # Process a new row in the new document
+            row_new_document += 1
+            line_number += 1
         row_original_document += 1
-        continue
 
-    # Detect the different rates for VAT
-    vats = get_vat_rates(values)
+    new_filename = '/'.join(
+        filename.split('/')[0:-1]) + '/' + filename.split('/')[-1].replace(
+            '.xls', '_nou.xlsx')
+    new_wb.save(new_filename)
+    time.sleep(5)
+    wb.close()
+    convert_xlxs_to_xls(new_filename)
+    os.remove(filename.replace('.xls', '.xlsx'))
+    os.remove(new_filename)
+    messagebox.showinfo("Atentie", "Fisierul a fost procesat si salvat")
 
-    line_number = 1
-    for vat in vats:
-        # Start building the new file based on the specified headers
-        for col, header in enumerate(HEADERS):
-            header_item = HEADERS[header]
-            value = get_cell_value_for_new_worksheet(header_item, header,
-                                                     values, vat, line_number)
-            char_new_ws = get_column_letter(col + 1)
-            new_ws[char_new_ws + str(row_new_document)] = value
-        # Process a new row in the new document
-        row_new_document += 1
-        line_number += 1
-    row_original_document += 1
 
-new_wb.save('newdocument.xlsx')
-wb.close()
+def browseFiles():
+    filename = filedialog.askopenfilename(initialdir="/",
+                                          title="Select a File",
+                                          filetypes=(("Text files", "*.txt*"),
+                                                     ("all files", "*.*")))
+
+    # Change label contents
+    # label_file_explorer.configure(
+    #     text="Fisierul a fost deschis si este procesat")
+    main_app(filename=filename)
+
+
+# Create the root window
+window = Tk()
+
+# Set window title
+window.title('AlyContab')
+
+# Set window size
+window.geometry("500x500")
+window.resizable(False, False)
+
+#Set window background color
+window.config(background="white")
+
+# Create a File Explorer label
+label_file_explorer = Label(
+    window, text="Selecteaza un fisier pentru a incepe procesul")
+
+button_explore = Button(window, text="Adauga fisier", command=browseFiles)
+
+# Grid method is chosen for placing
+# the widgets at respective positions
+# in a table like structure by
+# specifying rows and columns
+label_file_explorer.grid(column=1, row=1)
+
+button_explore.grid(column=1, row=2)
+
+# Let the window wait for any events
+window.mainloop()

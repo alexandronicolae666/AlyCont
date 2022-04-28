@@ -10,3 +10,4 @@ soffice --convert-to xlsx "/Users/alexandro666/Development/AlyCont/test.xls" -ou
 # When creating the new XLSX file
 
 - Have 2 entries, one for the 9% and one for 19% VAT ( if the specific VAT is applicable )
+- pyinstaller --onefile main.py
